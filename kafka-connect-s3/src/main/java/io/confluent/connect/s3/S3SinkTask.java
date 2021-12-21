@@ -232,13 +232,11 @@ public class S3SinkTask extends SinkTask {
       log.debug("Read {} records from Kafka", records.size());
     }
 
-    ArrayList<TopicPartition> keys = new ArrayList<TopicPartition>(
-        topicPartitionWriters.keySet()
-    );
+    ArrayList<TopicPartition> keys = new ArrayList<>(topicPartitionWriters.keySet());
     // Random shuffle the partition writer order so that a particular
     // PartitionWriter which is currently error-prone does not block all
     // other topics/partitions from being processed indefinitely
-    // (in the case of an unretryable exception)
+    // (in the case of an un-retriable exception)
     Collections.shuffle(keys);
 
     for (TopicPartition tp : keys) {
@@ -247,6 +245,7 @@ public class S3SinkTask extends SinkTask {
         writer.write();
       } catch (RetriableException e) {
         log.error("Exception on topic partition {}: ", tp, e);
+        // TODO(colivier): track retry count in TopicPartitionWriter
         Long currentStartOffset = writer.currentStartOffset();
         if (currentStartOffset != null) {
           context.offset(tp, currentStartOffset);
@@ -305,6 +304,8 @@ public class S3SinkTask extends SinkTask {
         topicPartitionWriters.get(tp).close();
       } catch (ConnectException e) {
         log.error("Error closing writer for {}. Error: {}", tp, e.getMessage());
+      } catch (Throwable e) {
+        log.error("OOPS Error closing writer for {}. Error: {}", tp, e.getMessage());
       }
     }
     topicPartitionWriters.clear();

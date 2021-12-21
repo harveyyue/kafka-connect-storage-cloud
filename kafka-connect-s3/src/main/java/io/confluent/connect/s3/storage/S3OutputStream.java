@@ -293,7 +293,7 @@ public class S3OutputStream extends PositionOutputStream {
       partETags.add(task);
     }
 
-    public void complete() {
+    public void complete() throws IOException {
       log.info("Completing multi-part upload for key '{}', id '{}'", key, uploadId);
       ArrayList<PartETag> tags = new ArrayList<>();
       for (Future<PartETag> tagTask : partETags) {
@@ -301,10 +301,10 @@ public class S3OutputStream extends PositionOutputStream {
           tags.add(tagTask.get());
         } catch (InterruptedException e) {
           log.error("Unable to get multipart upload result", e);
-          throw e;
+          throw new IOException("Execution interrupted: " + e.getMessage(), e);
         } catch (ExecutionException e) {
           log.error("Unable to get multipart upload result", e);
-          throw e;
+          throw new IOException("Execution failure: " + e.getMessage(), e);
         }
       }
       pool.shutdown();

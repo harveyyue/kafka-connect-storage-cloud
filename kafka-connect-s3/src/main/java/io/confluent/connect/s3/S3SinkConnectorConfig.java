@@ -595,6 +595,22 @@ public class S3SinkConnectorConfig extends StorageSinkConnectorConfig {
           Width.SHORT,
           "Behavior for null-valued records"
       );
+
+      configDef.define(
+          S3_UPLOAD_PARALLELIZATION_CONFIG,
+          Type.INT,
+          Math.max(1, Runtime.getRuntime().availableProcessors()), // Default to number of cores
+          Importance.LOW,
+          "Parallelization of S3 Multi-part Uploads. Increasing it will"
+              + " cause more parallel requests to S3, as well as memory use as multiple"
+              + " parts will remain in memory as they are being uploaded. The amount of"
+              + " memory required for holding consumed data in memory during upload is"
+              + " roughly (s3.part.upload.parallelization + 1) * s3.part.size",
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          "S3 Upload Parallelization"
+      );
     }
 
     {
@@ -666,22 +682,7 @@ public class S3SinkConnectorConfig extends StorageSinkConnectorConfig {
           "Enable Path Style Access to S3"
       );
 
-      configDef.define(
-          S3_UPLOAD_PARALLELIZATION_CONFIG,
-          Type.INT,
-          Math.max(1, Runtime.getRuntime().availableProcessors()), // Default to number of cores
-          Importance.LOW,
-          "Parallelization of S3 Multi-part Uploads. Increasing it will"
-              + " cause more parallel requests to S3, as well as memory use as multiple"
-              + " parts will remain in memory as they are being uploaded. The amount of"
-              + " memory required for holding consumed data in memory during upload is"
-              + " roughly (s3.part.upload.parallelization + 1) * s3.part.size",
-          group,
-          ++orderInGroup,
-          Width.LONG,
-          "S3 Upload Parallelization"
-      );
-   }
+    }
     return configDef;
   }
 

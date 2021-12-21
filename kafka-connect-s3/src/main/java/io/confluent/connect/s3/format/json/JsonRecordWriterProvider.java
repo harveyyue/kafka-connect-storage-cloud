@@ -94,7 +94,7 @@ public class JsonRecordWriterProvider extends RecordViewSetter
               writer.writeRaw(LINE_SEPARATOR);
             }
           } catch (IOException e) {
-            throw new ConnectException(e);
+            throw S3ErrorUtils.maybeRetriableConnectException(e);
           }
         }
 
@@ -107,7 +107,7 @@ public class JsonRecordWriterProvider extends RecordViewSetter
             s3out.commit();
             s3outWrapper.close();
           } catch (IOException e) {
-            throw new RetriableException(e);
+            throw S3ErrorUtils.maybeRetriableConnectException(e);
           }
         }
 
@@ -116,12 +116,12 @@ public class JsonRecordWriterProvider extends RecordViewSetter
           try {
             writer.close();
           } catch (IOException e) {
-            throw new ConnectException(e);
+            throw S3ErrorUtils.maybeRetriableConnectException(e);
           }
         }
       };
     } catch (IOException e) {
-      throw new ConnectException(e);
+      throw S3ErrorUtils.maybeRetriableConnectException(e);
     }
   }
 }

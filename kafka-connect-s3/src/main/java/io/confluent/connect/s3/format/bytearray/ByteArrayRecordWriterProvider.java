@@ -74,7 +74,7 @@ public class ByteArrayRecordWriterProvider extends RecordViewSetter
           s3outWrapper.write(bytes);
           s3outWrapper.write(lineSeparatorBytes);
         } catch (IOException e) {
-          S3ErrorUtils.throwMaybeRetriableConnectException(e);
+          throw S3ErrorUtils.maybeRetriableConnectException(e);
         }
       }
 
@@ -84,7 +84,7 @@ public class ByteArrayRecordWriterProvider extends RecordViewSetter
           s3out.commit();
           s3outWrapper.close();
         } catch (IOException e) {
-          throw new RetriableException(e);
+          throw S3ErrorUtils.maybeRetriableConnectException(e);
         }
       }
 

@@ -86,7 +86,7 @@ public class ParquetRecordWriterProvider extends RecordViewSetter
                     .withPageSize(PAGE_SIZE)
                     .build();
           } catch (IOException e) {
-            S3ErrorUtils.throwMaybeRetriableConnectException(e);
+            throw S3ErrorUtils.maybeRetriableConnectException(e);
           }
         }
         log.trace("Sink record with view {}: {}", recordView, record);
@@ -94,7 +94,7 @@ public class ParquetRecordWriterProvider extends RecordViewSetter
         try {
           writer.write((GenericRecord) value);
         } catch (IOException e) {
-          S3ErrorUtils.throwMaybeRetriableConnectException(e);
+          throw S3ErrorUtils.maybeRetriableConnectException(e);
         }
       }
 
@@ -105,7 +105,7 @@ public class ParquetRecordWriterProvider extends RecordViewSetter
             writer.close();
           }
         } catch (IOException e) {
-          throw new ConnectException(e);
+          throw S3ErrorUtils.maybeRetriableConnectException(e);
         }
       }
 
@@ -117,7 +117,7 @@ public class ParquetRecordWriterProvider extends RecordViewSetter
             writer.close();
           }
         } catch (IOException e) {
-          throw new RetriableException(e);
+          throw S3ErrorUtils.maybeRetriableConnectException(e);
         }
       }
     };

@@ -17,6 +17,7 @@ package io.confluent.connect.s3.format.avro;
 
 import static io.confluent.connect.s3.util.Utils.getAdjustedFilename;
 
+import io.confluent.connect.s3.util.S3ErrorUtils;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -89,7 +90,7 @@ public class AvroRecordWriterProvider extends RecordViewSetter
           }
           writer.append(value);
         } catch (IOException e) {
-          throw new ConnectException(e);
+          S3ErrorUtils.throwMaybeRetriableConnectException(e);
         }
       }
 

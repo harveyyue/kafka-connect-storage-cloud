@@ -227,24 +227,19 @@ public class S3OutputStream extends PositionOutputStream {
     );
   }
 
-  private <T> T handleAmazonExceptions(Supplier<T> supplier) throws IOException {
+  /**
+   * Return the given Supplier value, converting any thrown AmazonClientException object
+   * to an IOException object (containing the AmazonClientException object) and
+   * throw that instead.
+   * @param supplier The supplier to evaluate
+   * @param <T> The object type returned by the Supplier
+   * @return The value returned by the Supplier
+   * @throws IOException Any IOException or AmazonClientException thrown while
+   *                     retreiving the Supplier's value
+   */
+  private static <T> T handleAmazonExceptions(Supplier<T> supplier) throws IOException {
     try {
       return supplier.get();
-    } catch (AmazonServiceException e) {
-      if (e.getErrorType() == ErrorType.Client) {
-        // S3 documentation states that this error type means there is a problem with the request
-        // and that retrying this request will not result in a successful response. This includes
-        // errors such as incorrect access keys, invalid parameter values, missing parameters, etc.
-        // Therefore, the connector should propagate this exception and fail.
-
-        // The only exception is "Too Many Requests" - these may succeed after some backoff
-        if (e.getStatusCode() == 429) {
-          throw new IOException(e);
-        }
-
-        throw new ConnectException(e);
-      }
-      throw new IOException(e);
     } catch (AmazonClientException e) {
       throw new IOException(e);
     }

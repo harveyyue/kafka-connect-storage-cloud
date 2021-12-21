@@ -34,7 +34,7 @@ public class S3ErrorUtils {
    * @param exception The exception to analyze
    * @return true if the exception is retryable
    */
-  private static boolean isRetryableAwsExceptionType(Throwable exception) {
+  private static boolean isRetryableException(Throwable exception) {
     if (exception == null) {
       return false;
     }
@@ -50,7 +50,7 @@ public class S3ErrorUtils {
       // should be passed via the `AmazonClientException` object
       // as its parent (as the SDK does), in which case, shouldRetry()
       // will often find it retryable.
-      return isRetryableAwsExceptionType(exception.getCause());
+      return isRetryableException(exception.getCause());
     }
     if (exception instanceof AmazonClientException) {
       // The AWS SDK maintains a check for what it considers to be
@@ -80,7 +80,7 @@ public class S3ErrorUtils {
     if (t instanceof ConnectException) {
       return (ConnectException) t;
     }
-    if (isRetryableAwsExceptionType(t)) {
+    if (isRetryableException(t)) {
       return StringUtils.isNotBlank(message)
           ? new RetriableException(message, t) : new RetriableException(t);
     }

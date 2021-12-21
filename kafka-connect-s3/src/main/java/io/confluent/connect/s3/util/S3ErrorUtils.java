@@ -24,12 +24,15 @@ import org.apache.kafka.connect.errors.RetriableException;
 
 import java.io.IOException;
 
+/**
+ * Utilities related to basic S3 error/exception analysis.
+ */
 public class S3ErrorUtils {
 
   /**
-   *
-   * @param exception
-   * @return
+   * Return whether the given exception is a "retryable" exception.
+   * @param exception The exception to analyze
+   * @return true if the exception is retryable
    */
   private static boolean isRetryableAwsExceptionType(Throwable exception) {
     if (exception == null) {
@@ -62,10 +65,12 @@ public class S3ErrorUtils {
   }
 
   /**
-   *
-   * @param message
-   * @param t
-   * @return
+   * Return a `ConnectException` exception which may or may not
+   * be of (or derived from) type `RetriableException`.
+   * @param message Optional message (can be null)
+   * @param t The exception to analyze
+   * @return an exception of (or derived from) `ConnectException` which
+   *         may also be of type `RetriableException`.
    */
   public static ConnectException maybeRetriableConnectException(
       String message,
@@ -84,9 +89,11 @@ public class S3ErrorUtils {
   }
 
   /**
-   *
-   * @param t
-   * @return
+   * Return a `ConnectException` exception which may or may not
+   * be of (or derived from) type `RetriableException`.
+   * @param t The exception to analyze
+   * @return an exception of (or derived from) `ConnectException` which
+   *         may also be of type `RetriableException`.
    */
   public static ConnectException maybeRetriableConnectException(
       Throwable t

@@ -25,8 +25,6 @@ import io.confluent.connect.s3.util.S3ErrorUtils;
 import io.confluent.connect.storage.format.RecordWriter;
 import io.confluent.connect.storage.format.RecordWriterProvider;
 import org.apache.kafka.connect.converters.ByteArrayConverter;
-import org.apache.kafka.connect.errors.ConnectException;
-import org.apache.kafka.connect.errors.RetriableException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

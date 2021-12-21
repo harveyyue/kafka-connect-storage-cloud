@@ -245,7 +245,6 @@ public class S3SinkTask extends SinkTask {
         writer.write();
       } catch (RetriableException e) {
         log.error("Exception on topic partition {}: ", tp, e);
-        // TODO(colivier): track retry count in TopicPartitionWriter
         Long currentStartOffset = writer.currentStartOffset();
         if (currentStartOffset != null) {
           context.offset(tp, currentStartOffset);
@@ -304,8 +303,6 @@ public class S3SinkTask extends SinkTask {
         topicPartitionWriters.get(tp).close();
       } catch (ConnectException e) {
         log.error("Error closing writer for {}. Error: {}", tp, e.getMessage());
-      } catch (Throwable e) {
-        log.error("OOPS Error closing writer for {}. Error: {}", tp, e.getMessage());
       }
     }
     topicPartitionWriters.clear();

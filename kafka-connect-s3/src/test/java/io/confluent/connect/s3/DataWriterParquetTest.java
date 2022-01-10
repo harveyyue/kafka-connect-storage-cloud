@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -726,17 +727,20 @@ public class DataWriterParquetTest extends TestWithMockedS3 {
     return expectedFiles;
   }
 
-  protected void verifyOffsets(Map<TopicPartition, OffsetAndMetadata> actualOffsets, Long[] validOffsets,
-                               Set<TopicPartition> partitions) {
+  protected void verifyOffsets(
+      Map<TopicPartition, OffsetAndMetadata> actualOffsets,
+      Long[] validOffsets,
+      Set<TopicPartition> partitions
+  ) {
     int i = 0;
-    Map<TopicPartition, OffsetAndMetadata> expectedOffsets = new HashMap<>();
+    Set<OffsetAndMetadata> expectedOffsets = new HashSet<>();
     for (TopicPartition tp : partitions) {
       Long offset = validOffsets[i++];
       if (offset != null) {
-        expectedOffsets.put(tp, new OffsetAndMetadata(offset, ""));
+        expectedOffsets.add(new OffsetAndMetadata(offset, ""));
       }
     }
-    assertEquals(expectedOffsets, actualOffsets);
+    assertTrue(Objects.equals(new HashSet<>(actualOffsets.values()), expectedOffsets));
   }
 
   protected List<SinkRecord> createRecordsWithAlteringSchemas(int size, long startOffset) {

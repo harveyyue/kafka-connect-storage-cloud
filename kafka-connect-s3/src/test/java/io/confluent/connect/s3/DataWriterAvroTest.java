@@ -1015,14 +1015,14 @@ public class DataWriterAvroTest extends TestWithMockedS3 {
   protected void verifyOffsets(Map<TopicPartition, OffsetAndMetadata> actualOffsets, long[] validOffsets,
                               Set<TopicPartition> partitions) {
     int i = 0;
-    Map<TopicPartition, OffsetAndMetadata> expectedOffsets = new HashMap<>();
+    Set<OffsetAndMetadata> expectedOffsets = new HashSet<>();
     for (TopicPartition tp : partitions) {
       long offset = validOffsets[i++];
       if (offset >= 0) {
-        expectedOffsets.put(tp, new OffsetAndMetadata(offset, ""));
+        expectedOffsets.add(new OffsetAndMetadata(offset, ""));
       }
     }
-    assertTrue(Objects.equals(actualOffsets, expectedOffsets));
+    assertTrue(Objects.equals(new HashSet<>(actualOffsets.values()), expectedOffsets));
   }
 
   protected void verifyRawOffsets(
@@ -1031,14 +1031,14 @@ public class DataWriterAvroTest extends TestWithMockedS3 {
       Set<TopicPartition> partitions
   ) {
     int i = 0;
-    Map<TopicPartition, Long> expectedOffsets = new HashMap<>();
+    Set<Long> expectedOffsets = new HashSet<>();
     for (TopicPartition tp : partitions) {
       long offset = validOffsets[i++];
       if (offset >= 0) {
-        expectedOffsets.put(tp, offset);
+        expectedOffsets.add(offset);
       }
     }
-    assertTrue(Objects.equals(actualOffsets, expectedOffsets));
+    assertTrue(Objects.equals(new HashSet<>(actualOffsets.values()), expectedOffsets));
   }
 }
 

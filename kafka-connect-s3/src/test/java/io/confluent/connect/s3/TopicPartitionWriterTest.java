@@ -1413,7 +1413,7 @@ public class TopicPartitionWriterTest extends TestWithMockedS3 {
   // whether a filename contains any of the extensions
   private boolean filenameContainsExtensions(String filename, Set<String> extensions) {
     for (String extension : extensions){
-      if (filename.contains(extension)) {
+      if (filename.endsWith(extension)) {
         return true;
       }
     }

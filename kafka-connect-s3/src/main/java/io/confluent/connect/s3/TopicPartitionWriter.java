@@ -95,6 +95,7 @@ public class TopicPartitionWriter {
   private final S3SinkConnectorConfig connectorConfig;
   private static final Time SYSTEM_TIME = new SystemTime();
   private ErrantRecordReporter reporter;
+  private final boolean rotateFile;
 
   public TopicPartitionWriter(TopicPartition tp,
                               S3Storage storage,
@@ -165,6 +166,7 @@ public class TopicPartitionWriter {
     zeroPadOffsetFormat = "%0"
         + connectorConfig.getInt(S3SinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG)
         + "d";
+    rotateFile = connectorConfig.getBoolean(S3SinkConnectorConfig.ROTATE_FILE_MULTIPLE_SCHEMA);
 
     // Initialize scheduled rotation timer if applicable
     setNextScheduledRotation();
@@ -229,6 +231,9 @@ public class TopicPartitionWriter {
         String encodedPartition;
         try {
           encodedPartition = partitioner.encodePartition(record, now);
+          if (!rotateFile) {
+            encodedPartition = encodedPartition + fileDelim + valueSchema.version();
+          }
         } catch (PartitionException e) {
           if (reporter != null) {
             reporter.report(record, e);
@@ -380,7 +385,11 @@ public class TopicPartitionWriter {
   }
 
   private String getDirectoryPrefix(String encodedPartition) {
-    return partitioner.generatePartitionedPath(tp.topic(), encodedPartition);
+    String adjustedEncodedPartition = encodedPartition;
+    if (!rotateFile) {
+      adjustedEncodedPartition = adjustedEncodedPartition.substring(0, adjustedEncodedPartition.lastIndexOf(fileDelim));
+    }
+    return partitioner.generatePartitionedPath(tp.topic(), adjustedEncodedPartition);
   }
 
   private void nextState() {
@@ -506,7 +515,7 @@ public class TopicPartitionWriter {
     } else {
       long startOffset = startOffsets.get(encodedPartition);
       String prefix = getDirectoryPrefix(encodedPartition);
-      commitFile = fileKeyToCommit(prefix, startOffset);
+      commitFile = fileKeyToCommit(prefix, startOffset, encodedPartition);
       commitFiles.put(encodedPartition, commitFile);
     }
     return commitFile;
@@ -519,12 +528,13 @@ public class TopicPartitionWriter {
            : suffix;
   }
 
-  private String fileKeyToCommit(String dirPrefix, long startOffset) {
+  private String fileKeyToCommit(String dirPrefix, long startOffset, String encodedPartition) {
     String name = tp.topic()
                       + fileDelim
                       + tp.partition()
                       + fileDelim
                       + String.format(zeroPadOffsetFormat, startOffset)
+                      + (rotateFile ? "" : fileDelim + encodedPartition.substring(encodedPartition.lastIndexOf(fileDelim) + 1))
                       + extension;
     return fileKey(topicsDir, dirPrefix, name);
   }

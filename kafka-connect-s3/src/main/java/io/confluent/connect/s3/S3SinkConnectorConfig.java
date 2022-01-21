@@ -172,6 +172,9 @@ public class S3SinkConnectorConfig extends StorageSinkConnectorConfig {
   public static final String HEADERS_FORMAT_CLASS_CONFIG = "headers.format.class";
   public static final Class<? extends Format> HEADERS_FORMAT_CLASS_DEFAULT = AvroFormat.class;
 
+  public static final String ROTATE_FILE_MULTIPLE_SCHEMA = "rotate.file.multiple.schema";
+  public static final boolean ROTATE_FILE_MULTIPLE_SCHEMA_DEFAULT = true;
+
   private final String name;
 
   private final StorageCommonConfig commonConfig;
@@ -592,6 +595,18 @@ public class S3SinkConnectorConfig extends StorageSinkConnectorConfig {
           ++orderInGroup,
           Width.SHORT,
           "Behavior for null-valued records"
+      );
+
+      configDef.define(
+          ROTATE_FILE_MULTIPLE_SCHEMA,
+          Type.BOOLEAN,
+          ROTATE_FILE_MULTIPLE_SCHEMA_DEFAULT,
+          Importance.LOW,
+          "Specifies whether or not to rotate file when meeting multiple version schema",
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          "Rotate file when meeting multiple version schema"
       );
     }
 

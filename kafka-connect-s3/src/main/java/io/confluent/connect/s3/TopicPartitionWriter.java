@@ -608,7 +608,8 @@ public class TopicPartitionWriter {
 
   private void commitFile(String encodedPartition) {
     if (!startOffsets.containsKey(encodedPartition)) {
-      log.warn("Tried to commit file with missing starting offset partition: {}. Ignoring.");
+      log.warn("Tried to commit file with missing starting offset partition: {}. Ignoring.",
+          encodedPartition);
       return;
     }
 

@@ -129,7 +129,7 @@ public class S3SinkConnectorConfig extends StorageSinkConnectorConfig {
       new CompressionLevelValidator();
 
   public static final String S3_PART_RETRIES_CONFIG = "s3.part.retries";
-  public static final int S3_PART_RETRIES_DEFAULT = 3;
+  public static final int S3_PART_RETRIES_DEFAULT = 5;
 
   public static final String FORMAT_BYTEARRAY_EXTENSION_CONFIG = "format.bytearray.extension";
   public static final String FORMAT_BYTEARRAY_EXTENSION_DEFAULT = ".bin";
@@ -792,6 +792,10 @@ public class S3SinkConnectorConfig extends StorageSinkConnectorConfig {
 
   public int getS3PartRetries() {
     return getInt(S3_PART_RETRIES_CONFIG);
+  }
+
+  public long getS3RetryBackoff() {
+    return getLong(S3_RETRY_BACKOFF_CONFIG);
   }
 
   public String getByteArrayExtension() {

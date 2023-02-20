@@ -32,6 +32,7 @@ import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import io.confluent.connect.s3.S3SinkConnectorConfig;
+import io.confluent.connect.s3.util.RetryUtil;
 import io.confluent.connect.storage.common.util.StringUtils;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.parquet.io.PositionOutputStream;
@@ -44,6 +45,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Output stream enabling multi-part uploads of Kafka records.
@@ -220,7 +222,10 @@ public class S3OutputStream extends PositionOutputStream {
     }
 
     try {
-      return new MultipartUpload(s3.initiateMultipartUpload(initRequest).getUploadId());
+      String uploadId = callWithRetries(
+          "MultipartUpload getUploadId",
+          () -> s3.initiateMultipartUpload(initRequest).getUploadId());
+      return new MultipartUpload(uploadId);
     } catch (AmazonServiceException e) {
       if (e.getErrorType() == ErrorType.Client) {
         // S3 documentation states that this error type means there is a problem with the request
@@ -262,14 +267,17 @@ public class S3OutputStream extends PositionOutputStream {
                                             .withPartSize(partSize)
                                             .withGeneralProgressListener(progressListener);
       log.debug("Uploading part {} for id '{}'", currentPartNumber, uploadId);
-      partETags.add(s3.uploadPart(request).getPartETag());
+      partETags.add(callWithRetries("MultiPartUpload getPartETag",
+          () -> s3.uploadPart(request).getPartETag()));
     }
 
     public void complete() {
       log.debug("Completing multi-part upload for key '{}', id '{}'", key, uploadId);
       CompleteMultipartUploadRequest completeRequest =
           new CompleteMultipartUploadRequest(bucket, key, uploadId, partETags);
-      s3.completeMultipartUpload(completeRequest);
+      callWithRetries(
+          "MultiPartUpload complete",
+          () -> s3.completeMultipartUpload(completeRequest));
     }
 
     public void abort() {
@@ -300,5 +308,13 @@ public class S3OutputStream extends PositionOutputStream {
 
   public long getPos() {
     return position;
+  }
+
+  public <T> T callWithRetries(String description, Callable<T> function) {
+    return RetryUtil.callWithRetries(
+        description,
+        function,
+        connectorConfig.getS3PartRetries(),
+        connectorConfig.getS3RetryBackoff());
   }
 }

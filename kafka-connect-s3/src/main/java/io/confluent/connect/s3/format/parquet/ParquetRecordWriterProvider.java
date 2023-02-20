@@ -123,8 +123,8 @@ public class ParquetRecordWriterProvider extends RecordViewSetter
 
   private static class S3ParquetOutputFile implements OutputFile {
     private static final int DEFAULT_BLOCK_SIZE = 0;
-    private S3Storage storage;
-    private String filename;
+    private final S3Storage storage;
+    private final String filename;
     private S3ParquetOutputStream s3out;
 
     S3ParquetOutputFile(S3Storage storage, String filename) {

@@ -19,11 +19,12 @@ import static io.confluent.connect.s3.util.Utils.getAdjustedFilename;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.connect.converters.ByteArrayConverter;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.RetriableException;
-import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.sink.SinkRecord;
+import org.apache.kafka.connect.storage.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,9 +49,9 @@ public class JsonRecordWriterProvider extends RecordViewSetter
       = LINE_SEPARATOR.getBytes(StandardCharsets.UTF_8);
   private final S3Storage storage;
   private final ObjectMapper mapper;
-  private final JsonConverter converter;
+  private final Converter converter;
 
-  JsonRecordWriterProvider(S3Storage storage, JsonConverter converter) {
+  JsonRecordWriterProvider(S3Storage storage, Converter converter) {
     this.storage = storage;
     this.mapper = new ObjectMapper();
     this.converter = converter;
@@ -64,6 +65,8 @@ public class JsonRecordWriterProvider extends RecordViewSetter
   @Override
   public RecordWriter getRecordWriter(final S3SinkConnectorConfig conf, final String filename) {
     try {
+      log.info("Creating record writer for {} with converter {}",
+          filename, converter.getClass().getName());
       return new RecordWriter() {
         final String adjustedFilename = getAdjustedFilename(recordView, filename, getExtension());
         final S3OutputStream s3out = storage.create(adjustedFilename, true, JsonFormat.class);
@@ -71,13 +74,14 @@ public class JsonRecordWriterProvider extends RecordViewSetter
         final JsonGenerator writer = mapper.getFactory()
                                          .createGenerator(s3outWrapper)
                                          .setRootValueSeparator(null);
+        final boolean isByteArrayConverter = converter instanceof ByteArrayConverter;
 
         @Override
         public void write(SinkRecord record) {
           log.trace("Sink record with view {}: {}", recordView, record);
           try {
             Object value = recordView.getView(record, false);
-            if (value instanceof Struct) {
+            if (value instanceof Struct || isByteArrayConverter) {
               byte[] rawJson = converter.fromConnectData(
                   record.topic(),
                   recordView.getViewSchema(record, false),
